@@ -1,0 +1,117 @@
+providers:
+  webSearchOrder:
+    - codex
+    - tavily
+    - exa
+    - mojeek
+    - startpage
+    - duckduckgo
+    - google
+    - ecosia
+    - perplexity
+    - public
+  memoryModel: online
+  tinyModel: online
+  unexpectedStopModel: online
+modelRoles:
+  default: openai-codex/gpt-5.6-luna:medium
+  advisor: openai-codex/gpt-5.6-terra:medium
+  smol: openai-codex/gpt-5.6-luna:medium
+  slow: openai-codex/gpt-5.6-sol:low
+  tiny: openai-codex/gpt-5.3-codex-spark:low
+  task: openai-codex/gpt-5.6-luna:medium
+symbolPreset: nerd
+theme:
+  dark: anthracite
+  light: anthracite
+setupVersion: 1
+memory:
+  backend: mnemopi
+mnemopi:
+  proactiveLinking: true
+  noEmbeddings: false
+  llmMode: smol
+  scoping: per-project-tagged
+  polyphonicRecall: true
+  enhancedRecall: true
+read:
+  summarize:
+    enabled: false
+astGrep:
+  enabled: true
+generate_image:
+  enabled: false
+inspect_image:
+  mode: auto
+computer:
+  enabled: false
+checkpoint:
+  enabled: false
+github:
+  enabled: false
+todo:
+  reminders: true
+  remindersMax: 5
+  eager: default
+tools:
+  xdevDocs: catalog
+skills:
+  includeSkills:
+    - code-review
+    - debug-issue
+    - diagnosing-bugs
+    - explore-codebase
+    - i-have-adhd
+    - lint-and-validate
+    - plow-ahead
+    - quick-recap
+    - read-the-damn-docs
+    - refactor-safely
+    - review-changes
+    - tdd
+task:
+  eager: default
+  batch: true
+  maxConcurrency: 1
+  maxRecursionDepth: 1
+  prewalk: false
+  maxEffort: high
+  showResolvedModelBadge: true
+  enableEffort: false
+defaultThinkingLevel: low
+textVerbosity: low
+personality: pragmatic
+advisor:
+  enabled: false
+  syncBacklog: "off"
+  immuneTurns: 0
+colorBlindMode: false
+statusLine:
+  separator: none
+  transparent: false
+  preset: full
+  compactThinkingLevel: true
+  sessionAccent: true
+features:
+  unexpectedStopDetection: true
+error:
+  notify: "on"
+dev:
+  autoqaConsent: granted
+compaction:
+  strategy: context-full
+  thresholdPercent: 70
+  thresholdTokens: -1
+  remoteEnabled: true
+  remoteStreamingV2Enabled: true
+  midTurnEnabled: true
+  handoffSaveToDisk: true
+  idleEnabled: true
+prewalk:
+  enabled: false
+collapseChangelog: true
+autolearn:
+  enabled: true
+proseOnlyThinking: false
+mcp:
+  notifications: true

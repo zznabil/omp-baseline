@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
+  "mcpServers": {
+    "camofox": {
+      "type": "stdio",
+      "command": "<USERPROFILE>/AppData/Roaming/npm/camofox-mcp.cmd",
+      "env": { "CAMOFOX_URL": "http://127.0.0.1:9377" }
+    },
+    "cua-driver": {
+      "type": "stdio",
+      "command": "<USERPROFILE>/AppData/Local/Programs/Cua/cua-driver/bin/cua-driver.exe",
+      "args": ["mcp"]
+    }
+  },
+  "disabledServers": [
+    "obscura", "x64dbg", "cheat-engine", "ghidra", "deepwiki", "microsoft-learn",
+    "markitdown", "semble", "code-review-graph", "octocode", "serena", "openai-websearch",
+    "exa", "windows-mcp", "chrome-devtools", "codegraph", "github", "repomix",
+    "everything-search", "cua", "tavily", "parallel-search", "ida-pro-mcp", "node_repl"
+  ]
+}

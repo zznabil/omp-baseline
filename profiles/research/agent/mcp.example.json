@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
+  "mcpServers": {
+    "deepwiki": { "type": "http", "url": "https://mcp.deepwiki.com/mcp" },
+    "microsoft-learn": { "type": "http", "url": "https://learn.microsoft.com/api/mcp" },
+    "octocode": {
+      "type": "stdio",
+      "command": "<USERPROFILE>/AppData/Roaming/npm/octocode-mcp.cmd"
+    },
+    "openai-websearch": {
+      "type": "stdio",
+      "command": "C:/Tools/openai-websearch-mcp/.venv/Scripts/python.exe",
+      "args": ["-m", "openai_websearch_mcp.cli", "serve"],
+      "cwd": "C:/Tools/openai-websearch-mcp"
+    }
+  },
+  "disabledServers": [
+    "obscura", "camofox", "x64dbg", "cheat-engine", "ghidra", "cua-driver",
+    "markitdown", "semble", "code-review-graph", "serena", "exa", "windows-mcp",
+    "chrome-devtools", "codegraph", "repomix", "everything-search", "cua", "tavily",
+    "parallel-search", "ida-pro-mcp", "node_repl"
+  ]
+}

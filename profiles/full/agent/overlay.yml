@@ -1,0 +1,12 @@
+generate_image:
+  enabled: true
+inspect_image:
+  mode: on
+computer:
+  enabled: true
+checkpoint:
+  enabled: true
+github:
+  enabled: true
+skills:
+  includeSkills: []
