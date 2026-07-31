@@ -2,6 +2,7 @@ import type { ExtensionAPI, ExtensionContext } from "@oh-my-pi/pi-coding-agent";
 
 const STATUS_KEY = "openai-weekly-quota";
 const REFRESH_MS = 5 * 60_000;
+const USAGE_TIMEOUT_MS = 10_000;
 
 type UsageLimit = {
 	scope?: { windowId?: string; tier?: string };
@@ -38,34 +39,53 @@ function formatRemainingTime(resetsAt: number | undefined): string {
 
 
 async function getQuota(): Promise<QuotaSnapshot | null> {
+	const controller = new AbortController();
 	const process = Bun.spawn(["omp", "usage", "--provider", "openai-codex", "--json"], {
 		stdout: "pipe",
 		stderr: "pipe",
+		signal: controller.signal,
 	});
-	const [stdout, exitCode] = await Promise.all([new Response(process.stdout).text(), process.exited]);
-	if (exitCode !== 0) return null;
-
-	const limits = (JSON.parse(stdout) as UsageResponse).reports?.flatMap(report => report.limits ?? []) ?? [];
-	const fiveHourLimit = limits.find(limit => limit.scope?.windowId === "5h" && !limit.scope?.tier);
-	const sevenDayLimit = limits.find(limit => limit.scope?.windowId === "7d" && !limit.scope?.tier);
-	const sparkLimit = limits.find(limit => limit.scope?.windowId === "7d" && limit.scope?.tier === "spark");
-	const fiveHourRemaining = fiveHourLimit?.amount?.remaining;
-	const sevenDayRemaining = sevenDayLimit?.amount?.remaining;
-	const sparkRemaining = sparkLimit?.amount?.remaining;
-	const fiveHour =
-		typeof fiveHourRemaining === "number"
-			? { remaining: Math.round(fiveHourRemaining), resetsAt: fiveHourLimit?.window?.resetsAt }
-			: undefined;
-	const sevenDay =
-		typeof sevenDayRemaining === "number"
-			? { remaining: Math.round(sevenDayRemaining), resetsAt: sevenDayLimit?.window?.resetsAt }
-			: undefined;
-	const spark =
-		typeof sparkRemaining === "number"
-			? { remaining: Math.round(sparkRemaining), resetsAt: sparkLimit?.window?.resetsAt }
-			: undefined;
-	const quota = { fiveHour, sevenDay, spark };
-	return quota.fiveHour || quota.sevenDay || quota.spark ? quota : null;
+	// Bound the fetch: a wedged `omp usage` must not freeze the status line or
+	// hold the refreshing guard forever. Abort kills the child via the signal;
+	// the explicit kill covers runtimes where spawn ignores the signal.
+	const timer = setTimeout(() => {
+		controller.abort();
+		try {
+			process.kill();
+		} catch {}
+	}, USAGE_TIMEOUT_MS);
+	try {
+		const [stdout, exitCode] = await Promise.all([
+			new Response(process.stdout).text(),
+			process.exited,
+		]);
+		if (exitCode !== 0) return null;
+		const limits = (JSON.parse(stdout) as UsageResponse).reports?.flatMap(report => report.limits ?? []) ?? [];
+		const fiveHourLimit = limits.find(limit => limit.scope?.windowId === "5h" && !limit.scope?.tier);
+		const sevenDayLimit = limits.find(limit => limit.scope?.windowId === "7d" && !limit.scope?.tier);
+		const sparkLimit = limits.find(limit => limit.scope?.windowId === "7d" && limit.scope?.tier === "spark");
+		const fiveHourRemaining = fiveHourLimit?.amount?.remaining;
+		const sevenDayRemaining = sevenDayLimit?.amount?.remaining;
+		const sparkRemaining = sparkLimit?.amount?.remaining;
+		const fiveHour =
+			typeof fiveHourRemaining === "number"
+				? { remaining: Math.round(fiveHourRemaining), resetsAt: fiveHourLimit?.window?.resetsAt }
+				: undefined;
+		const sevenDay =
+			typeof sevenDayRemaining === "number"
+				? { remaining: Math.round(sevenDayRemaining), resetsAt: sevenDayLimit?.window?.resetsAt }
+				: undefined;
+		const spark =
+			typeof sparkRemaining === "number"
+				? { remaining: Math.round(sparkRemaining), resetsAt: sparkLimit?.window?.resetsAt }
+				: undefined;
+		const quota = { fiveHour, sevenDay, spark };
+		return quota.fiveHour || quota.sevenDay || quota.spark ? quota : null;
+	} catch {
+		return null;
+	} finally {
+		clearTimeout(timer);
+	}
 }
 
 export default function (pi: ExtensionAPI) {
