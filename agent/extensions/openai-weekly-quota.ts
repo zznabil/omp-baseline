@@ -10,8 +10,17 @@ type UsageLimit = {
 	window?: { resetsAt?: number };
 };
 
+type ResetCredit = {
+	expiresAt?: string;
+	status?: string;
+};
+
 type UsageReport = {
 	limits?: UsageLimit[];
+	resetCredits?: {
+		availableCount?: number;
+		credits?: ResetCredit[];
+	};
 };
 
 type UsageResponse = {
@@ -24,9 +33,13 @@ type QuotaWindow = {
 };
 
 type QuotaSnapshot = {
-	fiveHour?: QuotaWindow;
-	sevenDay?: QuotaWindow;
-	spark?: QuotaWindow;
+	codexWeekly?: QuotaWindow;
+	sparkFiveHour?: QuotaWindow;
+	sparkWeekly?: QuotaWindow;
+	bankedResets?: {
+		availableCount: number;
+		expiresAt?: number;
+	};
 };
 
 function formatRemainingTime(resetsAt: number | undefined): string {
@@ -37,6 +50,41 @@ function formatRemainingTime(resetsAt: number | undefined): string {
 	return days > 0 ? `${days}d ${hours}h` : `${hours}h`;
 }
 
+function toQuotaWindow(limit: UsageLimit | undefined): QuotaWindow | undefined {
+	const remaining = limit?.amount?.remaining;
+	return typeof remaining === "number"
+		? { remaining: Math.round(remaining), resetsAt: limit?.window?.resetsAt }
+		: undefined;
+}
+export function parseQuota(response: UsageResponse): QuotaSnapshot | null {
+	const reports = response.reports ?? [];
+	const limits = reports.flatMap(report => report.limits ?? []);
+	const codexWeekly = toQuotaWindow(
+		limits.find(limit => limit.scope?.windowId === "7d" && !limit.scope?.tier),
+	);
+	const sparkFiveHour = toQuotaWindow(
+		limits.find(limit => limit.scope?.windowId === "5h" && limit.scope?.tier === "spark"),
+	);
+	const sparkWeekly = toQuotaWindow(
+		limits.find(limit => limit.scope?.windowId === "7d" && limit.scope?.tier === "spark"),
+	);
+	const resetCredits = reports.find(report => report.resetCredits)?.resetCredits;
+	const availableCount = resetCredits?.availableCount;
+	const expirations = (resetCredits?.credits ?? [])
+		.flatMap(credit =>
+			credit.status === "available" && credit.expiresAt ? [Date.parse(credit.expiresAt)] : [],
+		)
+		.filter(Number.isFinite);
+	const bankedResets =
+		typeof availableCount === "number"
+			? {
+					availableCount,
+					expiresAt: expirations.length > 0 ? Math.min(...expirations) : undefined,
+				}
+			: undefined;
+	const quota = { codexWeekly, sparkFiveHour, sparkWeekly, bankedResets };
+	return quota.codexWeekly || quota.sparkFiveHour || quota.sparkWeekly || quota.bankedResets ? quota : null;
+}
 
 async function getQuota(): Promise<QuotaSnapshot | null> {
 	const controller = new AbortController();
@@ -60,27 +108,7 @@ async function getQuota(): Promise<QuotaSnapshot | null> {
 			process.exited,
 		]);
 		if (exitCode !== 0) return null;
-		const limits = (JSON.parse(stdout) as UsageResponse).reports?.flatMap(report => report.limits ?? []) ?? [];
-		const fiveHourLimit = limits.find(limit => limit.scope?.windowId === "5h" && !limit.scope?.tier);
-		const sevenDayLimit = limits.find(limit => limit.scope?.windowId === "7d" && !limit.scope?.tier);
-		const sparkLimit = limits.find(limit => limit.scope?.windowId === "7d" && limit.scope?.tier === "spark");
-		const fiveHourRemaining = fiveHourLimit?.amount?.remaining;
-		const sevenDayRemaining = sevenDayLimit?.amount?.remaining;
-		const sparkRemaining = sparkLimit?.amount?.remaining;
-		const fiveHour =
-			typeof fiveHourRemaining === "number"
-				? { remaining: Math.round(fiveHourRemaining), resetsAt: fiveHourLimit?.window?.resetsAt }
-				: undefined;
-		const sevenDay =
-			typeof sevenDayRemaining === "number"
-				? { remaining: Math.round(sevenDayRemaining), resetsAt: sevenDayLimit?.window?.resetsAt }
-				: undefined;
-		const spark =
-			typeof sparkRemaining === "number"
-				? { remaining: Math.round(sparkRemaining), resetsAt: sparkLimit?.window?.resetsAt }
-				: undefined;
-		const quota = { fiveHour, sevenDay, spark };
-		return quota.fiveHour || quota.sevenDay || quota.spark ? quota : null;
+		return parseQuota(JSON.parse(stdout) as UsageResponse);
 	} catch {
 		return null;
 	} finally {
@@ -115,11 +143,23 @@ export default function (pi: ExtensionAPI) {
 					.join(" ");
 			};
 			const separator = ctx.ui.theme.fg("muted", " │ ");
+			const bankedResets = quota.bankedResets;
+			const resetExpiry = formatRemainingTime(bankedResets?.expiresAt);
 			const text = [
 				ctx.ui.theme.fg("accent", "OpenAI"),
-				renderLimit("◷", "5h", quota.fiveHour),
-				renderLimit("↻", "7d", quota.sevenDay),
-				renderLimit("⚡", "Spark", quota.spark),
+				renderLimit("↻", "Codex 7d", quota.codexWeekly),
+				renderLimit("⚡", "Spark 5h", quota.sparkFiveHour),
+				renderLimit("⚡", "Spark 7d", quota.sparkWeekly),
+				[
+					ctx.ui.theme.fg("accent", "◆"),
+					ctx.ui.theme.fg("muted", "Banked resets"),
+					bankedResets
+						? ctx.ui.theme.fg(bankedResets.availableCount > 0 ? "success" : "muted", String(bankedResets.availableCount))
+						: ctx.ui.theme.fg("muted", "—"),
+					resetExpiry ? ctx.ui.theme.fg("muted", `· ${resetExpiry}`) : "",
+				]
+					.filter(Boolean)
+					.join(" "),
 			].join(separator);
 			ctx.ui.setStatus(STATUS_KEY, text);
 		} catch {
