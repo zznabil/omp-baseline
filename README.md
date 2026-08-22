@@ -2,7 +2,7 @@
 
 Windows setup containing only:
 
-- Live OpenAI quota statusline: 5-hour, 7-day, and Spark windows.
+- Live OpenAI quota statusline: Codex weekly, Spark 5-hour, Spark weekly, and banked resets.
 - [Ponytail](https://github.com/DietrichGebert/ponytail) 4.9.0 in ultra mode.
 - [Caveman](https://github.com/JuliusBrussee/caveman) 1.10.0 skill in ultra mode.
 - [Semble](https://github.com/MinishLab/semble) 0.5.5 CLI with an OMP semantic-search skill.
@@ -27,6 +27,6 @@ Restart OMP after installation.
 - OMP plugin `@dietrichgebert/ponytail@4.9.0`
 - Semble CLI `0.5.5`
 
-The quota extension runs `omp usage --provider openai-codex --json` after each turn and every five minutes. Missing provider windows display as `—`; failed usage checks display `OpenAI quota unavailable`.
+The quota extension runs `omp usage --provider openai-codex --json` after each turn and every five minutes. It displays Codex weekly usage, separate Spark 5-hour and weekly usage, and available banked resets with the nearest expiry. Missing provider values display as `—`; failed usage checks display `OpenAI quota unavailable`.
 
 Caveman Proxy, MCP servers, browser tooling, profiles, launchers, and health checks are intentionally excluded.
