@@ -9,7 +9,7 @@ Windows setup containing only:
 
 ## Install
 
-Requirements: OMP, PowerShell 5.1+, [uv](https://docs.astral.sh/uv/), and an authenticated `openai-codex` provider.
+Requirements: OMP, PowerShell 5.1+, [uv](https://docs.astral.sh/uv/). Live OpenAI quota statusline needs authenticated `openai-codex` provider; Ponytail, Caveman, Semble work without it.
 
 ```powershell
 ./install.ps1
