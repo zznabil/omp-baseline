@@ -4,7 +4,7 @@ Windows setup containing only:
 
 - Live OpenAI quota statusline: Codex weekly, Spark 5-hour, Spark weekly, and banked resets.
 - [Ponytail](https://github.com/DietrichGebert/ponytail) 4.9.0 in ultra mode.
-- [Caveman](https://github.com/JuliusBrussee/caveman) 1.10.0 skill in ultra mode.
+- [Caveman](https://github.com/JuliusBrussee/caveman) 2.3.1 skill in ultra mode.
 - [Semble](https://github.com/MinishLab/semble) 0.5.5 CLI with an OMP semantic-search skill.
 
 ## Install

@@ -22,7 +22,7 @@ if ($LASTEXITCODE -ne 0) { throw "Semble installation failed with exit code $LAS
 
 
 Invoke-WebRequest `
-  -Uri "https://raw.githubusercontent.com/JuliusBrussee/caveman/v1.10.0/skills/caveman/SKILL.md" `
+  -Uri "https://raw.githubusercontent.com/JuliusBrussee/caveman/v2.3.1/skills/caveman/SKILL.md" `
   -OutFile (Join-Path $cavemanSkillDir "SKILL.md")
 
 $ponytailConfig = @'
@@ -32,5 +32,5 @@ $ponytailConfig = @'
 '@
 [IO.File]::WriteAllText((Join-Path $ponytailConfigDir "config.json"), $ponytailConfig, (New-Object Text.UTF8Encoding($false)))
 
-Write-Host "Installed: OpenAI quota statusline, Ponytail 4.9.0 ultra, Caveman 1.10.0 ultra, Semble 0.5.5."
+Write-Host "Installed: OpenAI quota statusline, Ponytail 4.9.0 ultra, Caveman 2.3.1 ultra, Semble 0.5.5."
 Write-Host "Restart OMP."
