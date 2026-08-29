@@ -13,6 +13,23 @@ Copy-Item (Join-Path $repoRoot "agent\extensions\openai-weekly-quota.ts") $exten
 Copy-Item (Join-Path $repoRoot "agent\extensions\caveman-ultra.ts") $extensionDir -Force
 Copy-Item (Join-Path $repoRoot "agent\skills\semble\SKILL.md") $sembleSkillDir -Force
 
+$ompSettings = @(
+  @("providers.openai-codex.codeMode", "on"),
+  @("textVerbosity", "low"),
+  @("personality", "friendly"),
+  @("astGrep.enabled", "true"),
+  @("checkpoint.enabled", "true"),
+  @("task.enableLsp", "true"),
+  @("task.maxRecursionDepth", "0"),
+  @("lsp.formatOnWrite", "true"),
+  @("lsp.diagnosticsOnEdit", "true"),
+  @("edit.mode", "hashline")
+)
+foreach ($setting in $ompSettings) {
+  & omp config set $setting[0] $setting[1]
+  if ($LASTEXITCODE -ne 0) { throw "OMP configuration failed for $($setting[0]) with exit code $LASTEXITCODE." }
+}
+
 & omp plugin install "@dietrichgebert/ponytail@4.9.0" --force
 if ($LASTEXITCODE -ne 0) { throw "Ponytail installation failed with exit code $LASTEXITCODE." }
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) { throw "uv is required: https://docs.astral.sh/uv/getting-started/installation/" }
@@ -32,5 +49,5 @@ $ponytailConfig = @'
 '@
 [IO.File]::WriteAllText((Join-Path $ponytailConfigDir "config.json"), $ponytailConfig, (New-Object Text.UTF8Encoding($false)))
 
-Write-Host "Installed: OpenAI quota statusline, Ponytail 4.9.0 ultra, Caveman 2.3.1 ultra, Semble 0.5.5."
+Write-Host "Installed: OMP baseline config, OpenAI quota statusline, Ponytail 4.9.0 ultra, Caveman 2.3.1 ultra, Semble 0.5.5."
 Write-Host "Restart OMP."

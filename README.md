@@ -2,6 +2,7 @@
 
 Windows setup containing only:
 
+- Portable OMP defaults: code mode, low verbosity, friendly personality, AST grep, checkpoints, LSP, hashline editing, and no nested subagents.
 - Live OpenAI quota statusline: Codex weekly, Spark 5-hour, Spark weekly, and banked resets.
 - [Ponytail](https://github.com/DietrichGebert/ponytail) 4.9.0 in ultra mode.
 - [Caveman](https://github.com/JuliusBrussee/caveman) 2.3.1 skill in ultra mode.
@@ -16,6 +17,8 @@ Requirements: OMP, PowerShell 5.1+, [uv](https://docs.astral.sh/uv/). Live OpenA
 ```
 
 Restart OMP after installation.
+
+The installer merges these settings into the existing OMP configuration: `providers.openai-codex.codeMode=on`, `textVerbosity=low`, `personality=friendly`, `astGrep.enabled=true`, `checkpoint.enabled=true`, `task.enableLsp=true`, `task.maxRecursionDepth=0`, `lsp.formatOnWrite=true`, `lsp.diagnosticsOnEdit=true`, and `edit.mode=hashline`. Other settings remain unchanged.
 
 ## Installed files
 
