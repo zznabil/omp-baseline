@@ -10,11 +10,11 @@
 
 ## Project Overview
 
-Minimal Windows OMP baseline for a live OpenAI quota statusline plus Semble integration. Requirements: OMP, PowerShell 5.1+, `uv` (quota statusline needs authenticated `openai-codex` provider; Semble does not). See `README.md:3-10`.
+Minimal Windows OMP baseline for a live OpenAI quota statusline plus Semble and Ponytail Pi integration. Requirements: OMP, PowerShell 5.1+, `uv` (quota statusline needs authenticated `openai-codex` provider; Semble does not). Ponytail is installed through OMP from a pinned upstream commit. See `README.md`.
 
 ## Architecture & Data Flow
 
-- `install.ps1` provisions the user-local OMP quota extension and Semble skill, installs the pinned Semble CLI, removes exact legacy integration artifacts, and writes generic OMP settings.
+- `install.ps1` provisions the user-local OMP quota extension and Semble skill, installs the pinned Semble CLI, installs the pinned Ponytail Pi package through OMP's plugin manager, removes exact legacy integration artifacts, writes generic OMP settings, and persists Ponytail `defaultMode=ultra` unless PONYTAIL_DEFAULT_MODE overrides it, while preserving unrelated Ponytail config keys.
 - `agent/extensions/openai-weekly-quota.ts` runs `omp usage --provider openai-codex --json`, parses Codex/Spark limits and banked reset credits, and renders one OMP status entry.
 - Quota refreshes on `session_start`, `turn_end`, and every five minutes; `session_shutdown` clears the timer and status. A module-local `refreshing` guard prevents overlap.
 - Errors at the quota subprocess or JSON boundary become an unavailable status; do not hide new failures with unrelated caller guards.
@@ -23,12 +23,13 @@ Minimal Windows OMP baseline for a live OpenAI quota statusline plus Semble inte
 
 - `agent/extensions/`: OMP TypeScript extensions.
 - `agent/skills/semble/`: installed Semble skill source.
-- User install targets are documented in `README.md:20-27` and created by `install.ps1:3-10`.
+- User install targets are documented in `README.md` and created by `install.ps1`.
 
 ## Development Commands
 
 - Install: `./install.ps1` from PowerShell. It requires explicit authorization before running because it installs tools and removes exact legacy artifacts.
 - Targeted test: `bun test agent/extensions/openai-weekly-quota.test.ts` (verified: Bun 1.3.14, 3 passed, 0 failed). Bun is not pinned by this repository.
+- Installer smoke: stage isolated `HOME`/`APPDATA` and mock `omp`/`uv`; never execute `install.ps1` against the real profile.
 - There is no `package.json`, lockfile, `tsconfig`, build, lint, or CI configuration. Do not invent substitute commands or coverage gates.
 
 ## Code Conventions & Common Patterns
@@ -42,7 +43,7 @@ Minimal Windows OMP baseline for a live OpenAI quota statusline plus Semble inte
 ## Important Files
 
 - `README.md`: purpose, requirements, install procedure, installed files, and explicit exclusions.
-- `install.ps1`: provisioning, cleanup of exact legacy artifacts, and pinned Semble version 0.5.5.
+- `install.ps1`: provisioning, cleanup of exact legacy artifacts, pinned Semble version 0.5.5, pinned Ponytail package installation, and persisted `defaultMode=ultra` config merge.
 - `agent/extensions/openai-weekly-quota.ts`: quota subprocess, parser, refresh lifecycle, and status rendering.
 - `agent/extensions/openai-weekly-quota.test.ts`: parser behavior coverage.
 - `agent/skills/semble/SKILL.md`: Semble search workflow.
@@ -50,7 +51,7 @@ Minimal Windows OMP baseline for a live OpenAI quota statusline plus Semble inte
 ## Runtime/Tooling Preferences
 
 - Target Windows PowerShell and OMP runtime APIs; use Bun APIs already used by the extensions (`Bun.spawn`, `Bun.file`).
-- Preserve pinned dependency versions unless an explicit change is requested.
+- Preserve pinned dependency versions unless an explicit change is requested. Ponytail is pinned to upstream main commit `974d940a1c5344210874150b98ff0d2c861fab6a`; do not silently move it to a tag or branch.
 - Inspect installers, hooks, workflow definitions, and remote sources before execution; never auto-update dependencies or execute untrusted fetched code.
 - Use Semble for conceptual discovery, exact grep for literal matches, and LSP for symbols/references when available, as specified in `agent/skills/semble/SKILL.md:6-12`.
 
